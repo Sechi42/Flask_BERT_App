@@ -116,3 +116,4 @@ if __name__ == "__main__":
     # Configuración de puerto dinámico para despliegue y optimización
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, use_reloader=False, host='0.0.0.0', port=port)
+
