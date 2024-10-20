@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+import streamlit as st
 import pandas as pd
 import os
 import pickle
@@ -8,8 +8,6 @@ import transformers
 import numpy as np
 import math
 from tqdm import tqdm
-
-app = Flask(__name__)
 
 # Cargar el pipeline de clasificación solo una vez
 with open('modelo.pkl', 'rb') as archivo:
@@ -66,53 +64,31 @@ def BERT_text_to_embeddings(texts, max_length=512, batch_size=10, disable_progre
 
 classification_pipeline = modelo_cargado
 
-# Lista de columnas esperadas
-REQUIRED_COLUMNS = ['tconst', 'title_type', 'primary_title', 'original_title', 
-                    'start_year', 'end_year', 'runtime_minutes', 'is_adult', 
-                    'genres', 'average_rating', 'votes', 'rating', 'sp', 
-                    'ds_part', 'idx', 'review']
+# Título de la app
+st.title("Movie Review Sentiment Analysis")
 
-@app.route('/')
-def home():
-    return render_template("homepage.html")
+# Formulario de entrada de la review
+review_text = st.text_area("Enter a movie review:")
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if request.method == 'POST':
-        request_data = dict(request.form)
-        print("Form data received:", request_data)
-        
-        # Normalizar el texto de la review si está presente
-        if 'review' in request_data:
-            review_text = normalize_text(request_data['review'])
-            # Generar embeddings BERT para la review normalizada
-            try:
-                review_embeddings = BERT_text_to_embeddings([review_text])
-                # Convertir los embeddings a un DataFrame para ser procesados
-                embeddings_df = pd.DataFrame(review_embeddings)
-            except Exception as e:
-                print(f"Error during BERT embeddings generation: {e}")
-                return render_template('homepage.html', prediction="Error in BERT embeddings generation")
-        else:
-            return render_template('homepage.html', prediction="No review text provided")
-        
-        # Verificar el tamaño de las embeddings generadas
-        print(f"Embeddings shape: {embeddings_df.shape}")
-
-        # Realizar la predicción con el pipeline cargado (ya en memoria)
+# Botón para hacer la predicción
+if st.button('Predict Sentiment'):
+    if review_text:
+        # Normalizar el texto
+        review_text_normalized = normalize_text(review_text)
+        # Generar embeddings BERT para la review normalizada
         try:
-            pred = classification_pipeline.predict(embeddings_df)
+            review_embeddings = BERT_text_to_embeddings([review_text_normalized])
+            # Convertir los embeddings a un DataFrame para ser procesados
+            embeddings_df = pd.DataFrame(review_embeddings)
         except Exception as e:
-            print(f"Prediction error: {e}")
-            return render_template('homepage.html', prediction="Error in prediction")
-        
-        # Interpretar el resultado de la predicción
-        result = "Positive Sentiment" if int(pred[0]) == 1 else "Negative Sentiment"
-
-        # Renderizar la página con el resultado
-        return render_template('homepage.html', prediction=result)
-
-if __name__ == "__main__":
-    # Configuración de puerto dinámico para despliegue y optimización
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, use_reloader=False, host='0.0.0.0', port=port)
+            st.error(f"Error during BERT embeddings generation: {e}")
+        else:
+            # Realizar la predicción con el pipeline cargado (ya en memoria)
+            try:
+                pred = classification_pipeline.predict(embeddings_df)
+                result = "Positive Sentiment" if int(pred[0]) == 1 else "Negative Sentiment"
+                st.success(f"Prediction: {result}")
+            except Exception as e:
+                st.error(f"Error during prediction: {e}")
+    else:
+        st.warning("Please enter a review.")
