@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis with BERT</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Sentiment Analysis with BERT</h1>
+        <form action="/predict" method="POST">
+            <!-- Cambiar el nombre del campo a "review" -->
+            <label for="review">Enter text for sentiment analysis:</label>
+            <input type="text" id="review" name="review" placeholder="Enter text for sentiment analysis" required>
+            <button type="submit">Analyze Sentiment</button>
+        </form>
+
+        <!-- Mostrar el resultado si existe una predicción -->
+        {% if prediction %}
+        <div class="result">
+            <p><strong>Prediction:</strong> {{ prediction }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
