@@ -11,13 +11,7 @@ import numpy as np
 import math
 from tqdm import tqdm
 
-# Agregando el path para evitar errores de módulo no encontrado
-PACKAGE_ROOT = Path(os.path.abspath(os.path.dirname(__file__))).parent
-sys.path.append(str(PACKAGE_ROOT))
 
-# Luego, realizar la importación
-from config import config
-from processing.data_handling import load_pipeline
 
 app = Flask(__name__)
 
